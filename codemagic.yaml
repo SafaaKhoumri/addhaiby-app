@@ -6,6 +6,9 @@ workflows:
       flutter: "3.44.0"
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.addhaiby.app
     scripts:
       - name: Get Flutter packages
         script: flutter pub get
