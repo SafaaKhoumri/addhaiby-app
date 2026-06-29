@@ -10,21 +10,28 @@ workflows:
       cocoapods: default
     scripts:
       - name: Get Flutter packages
-        script: flutter pub get
+        script: flutter packages pub get
+
       - name: Set up code signing
         script: |
           keychain initialize
           app-store-connect fetch-signing-files com.addhaiby.app \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --issuer-id $APP_STORE_CONNECT_ISSUER_ID \
+            --key-id $APP_STORE_CONNECT_KEY_ID \
+            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY
           keychain add-certificates
           xcode-project use-profiles
+
       - name: Build iOS
         script: |
           flutter build ipa --release \
-            --export-options-plist=/Users/builder/export_options.plist
+            --export-options-plist=$CM_BUILD_DIR/ios/ExportOptions.plist
+
     artifacts:
       - build/ios/ipa/*.ipa
+
     publishing:
       app_store_connect:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
