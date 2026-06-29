@@ -11,7 +11,6 @@ workflows:
     scripts:
       - name: Get Flutter packages
         script: flutter packages pub get
-
       - name: Set up code signing
         script: |
           keychain initialize
@@ -20,18 +19,16 @@ workflows:
             --create \
             --issuer-id $APP_STORE_CONNECT_ISSUER_ID \
             --key-id $APP_STORE_CONNECT_KEY_ID \
-            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY
+            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --certificate-key @env:CERTIFICATE_KEY
           keychain add-certificates
           xcode-project use-profiles
-
       - name: Build iOS
         script: |
           flutter build ipa --release \
             --export-options-plist=$CM_BUILD_DIR/ios/ExportOptions.plist
-
     artifacts:
       - build/ios/ipa/*.ipa
-
     publishing:
       app_store_connect:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
