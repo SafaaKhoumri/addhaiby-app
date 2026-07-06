@@ -366,6 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
         case 'Bijoux en or':                        return 'مجوهرات ذهبية';
         case 'Bijoux en platine':                   return 'مجوهرات بلاتينية';
         case 'Bijoux en argent':                    return 'مجوهرات فضية';
+        case 'Contactez-nous via nos réseaux sociaux pour ces catégories': return 'اتصل بنا عبر شبكاتنا الاجتماعية لهذه الفئات';
         default: return key;
       }
     }
@@ -1082,7 +1083,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: cats.map((c) => _buildCategoryCard(c)).toList(),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            Text(
+              _translate('Contactez-nous via nos réseaux sociaux pour ces catégories'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: _isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1107,20 +1117,18 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
-  Widget _buildCategoryCard(Map<String, dynamic> cat) {
-    return Container(
-      decoration: BoxDecoration(
-        color: _isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          )
-        ],
+ Widget _buildCategoryCard(Map<String, dynamic> cat) {
+  return Container(
+    decoration: BoxDecoration(
+      color: _isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: (_isDarkMode ? Colors.grey.shade700 : Colors.grey.shade200),
       ),
-      child: Column(
+      // pas de boxShadow → ça ne ressemble plus à un bouton
+    ),
+    child: Column(
+
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(cat['icon'] as IconData,
