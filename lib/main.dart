@@ -1118,17 +1118,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
  Widget _buildCategoryCard(Map<String, dynamic> cat) {
-  return Container(
-    decoration: BoxDecoration(
-      color: _isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: (_isDarkMode ? Colors.grey.shade700 : Colors.grey.shade200),
+  return GestureDetector(
+    onTap: () => _showCategoryContactSheet(cat['label'] as String),
+    child: Container(
+      decoration: BoxDecoration(
+        color: _isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (_isDarkMode ? Colors.grey.shade700 : Colors.grey.shade200),
+        ),
       ),
-      // pas de boxShadow → ça ne ressemble plus à un bouton
-    ),
-    child: Column(
-
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(cat['icon'] as IconData,
@@ -1145,8 +1145,69 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+void _showCategoryContactSheet(String category) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: _isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) => Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Icon(Icons.diamond, size: 40, color: Color(0xFFD4A017)),
+          const SizedBox(height: 12),
+          Text(
+            category.replaceAll('\n', ' '),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: _isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _translate(
+                'Contactez-nous via nos réseaux sociaux pour ces catégories'),
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _socialBtn(FontAwesomeIcons.facebookF, const Color(0xFF1877F2),
+                  "https://www.facebook.com/share/1Cm6RexgVS/?mibextid=wwXIfr"),
+              const SizedBox(width: 24),
+              _socialBtn(FontAwesomeIcons.instagram, const Color(0xFFE1306C),
+                  "https://www.instagram.com/addhaiby?igsh=MWs4aG1qZmNrZXVncQ=="),
+              const SizedBox(width: 24),
+              _socialBtn(FontAwesomeIcons.whatsapp, const Color(0xFF25D366),
+                  "https://wa.me/212678660346"),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _socialBtn(dynamic icon, Color color, String url) {
     return GestureDetector(
