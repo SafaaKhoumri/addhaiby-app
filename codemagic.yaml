@@ -10,9 +10,10 @@ workflows:
       cocoapods: default
     scripts:
       - name: Get Flutter packages
-        script: flutter packages pub get
+        script: flutter pub get
       - name: Install CocoaPods
         script: |
+          flutter pub get
           cd ios && pod install && cd ..
       - name: Inject GoogleService-Info.plist
         script: |
