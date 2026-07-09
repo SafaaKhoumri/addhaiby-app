@@ -10,8 +10,12 @@ import FirebaseMessaging
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
 
-    // ✅ Initialiser Firebase côté natif
-    FirebaseApp.configure()
+    // ✅ Initialiser Firebase côté natif UNIQUEMENT s'il ne l'est pas déjà.
+    // (Flutter l'initialise déjà côté Dart via Firebase.initializeApp ;
+    //  ce garde-fou évite le double-init qui faisait crasher l'app.)
+    if FirebaseApp.app() == nil {
+      FirebaseApp.configure()
+    }
 
     // ✅ Enregistrer l'app auprès d'APNs pour recevoir un token
     if #available(iOS 10.0, *) {
