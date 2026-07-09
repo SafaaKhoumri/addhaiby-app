@@ -22,16 +22,14 @@ class NotificationService {
       sound: true,
     );
 
-    // ✅ Afficher les notifs même quand l'app est au premier plan (iOS)
+    // Afficher les notifs même quand l'app est au premier plan (iOS)
     await _messaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
 
-    // ✅ IMPORTANT iOS : attendre que le token APNs soit prêt AVANT de s'abonner.
-    // Au 1er lancement, l'enregistrement APNs prend 1-2 s ; sans cette attente,
-    // subscribeToTopic part trop tôt et échoue silencieusement.
+    // IMPORTANT iOS : attendre que le token APNs soit prêt AVANT de s'abonner.
     String? apnsToken = await _messaging.getAPNSToken();
     int retries = 0;
     while (apnsToken == null && retries < 8) {
@@ -41,7 +39,6 @@ class NotificationService {
     }
     debugPrint('🍏 APNs Token : $apnsToken');
 
-    // Abonnement au topic seulement après que APNs soit prêt
     try {
       await _messaging.subscribeToTopic(_topic);
       debugPrint('✅ Abonné au topic $_topic');
@@ -59,29 +56,6 @@ class NotificationService {
 
     final token = await _messaging.getToken();
     debugPrint('📱 FCM Token : $token');
-  }
-
-  // ✅ Récupérer le token FCM pour l'afficher dans l'UI (diagnostic)
-  static Future<String?> getFcmToken() async {
-    if (kIsWeb) return null;
-    try {
-      return await _messaging.getToken();
-    } catch (e) {
-      debugPrint('❌ Erreur getFcmToken : $e');
-      return null;
-    }
-  }
-
-  // ✅ Vérifier si l'abonnement au topic a fonctionné (re-tente une fois)
-  static Future<bool> resubscribeTopic() async {
-    if (kIsWeb) return false;
-    try {
-      await _messaging.subscribeToTopic(_topic);
-      return true;
-    } catch (e) {
-      debugPrint('❌ Erreur resubscribeTopic : $e');
-      return false;
-    }
   }
 
   // ── Générer un token OAuth2 via le compte de service ──────
