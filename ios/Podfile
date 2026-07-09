@@ -1,5 +1,5 @@
 ﻿# Uncomment this line to define a global platform for your project
-platform :ios, '12.0'
+platform :ios, '13.0'
 
 # CocoaPods analytics sends network stats synchronously affecting your app's
 # but can be removed by commenting out this line.
