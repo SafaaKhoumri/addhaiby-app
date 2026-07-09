@@ -4,31 +4,34 @@ import FirebaseCore
 import FirebaseMessaging
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
 
-    // ✅ Initialiser Firebase côté natif UNIQUEMENT s'il ne l'est pas déjà.
-    // (Flutter l'initialise déjà côté Dart via Firebase.initializeApp ;
-    //  ce garde-fou évite le double-init qui faisait crasher l'app.)
+    // ✅ Initialiser Firebase côté natif seulement si pas déjà fait
     if FirebaseApp.app() == nil {
       FirebaseApp.configure()
     }
 
-    // ✅ Enregistrer l'app auprès d'APNs pour recevoir un token
+    // ✅ S'enregistrer auprès d'APNs pour obtenir le token
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self
     }
     application.registerForRemoteNotifications()
 
-    GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-  // ✅ Quand APNs renvoie le token, le donner à Firebase Messaging.
-  // C'est CE pont qui manquait : sans lui, subscribeToTopic échoue sur iOS.
+  // ✅ On GARDE le nouveau système d'enregistrement des plugins de Flutter 3.44
+  // (c'est ce que faisait ton fichier d'origine qui se lançait bien).
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+  }
+
+  // ✅ Le pont qui manquait : donner le token APNs à Firebase Messaging.
   override func application(
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
@@ -37,7 +40,6 @@ import FirebaseMessaging
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
 
-  // ✅ En cas d'échec d'enregistrement APNs (utile pour diagnostiquer)
   override func application(
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error
