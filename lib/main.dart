@@ -258,10 +258,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return _selectedKarat == 24 ? base * 1.3333 : base;
   }
 
-  // ✅ Comparaison avec la 2ème entrée de l'historique (entrée précédente réelle)
-  // ✅ Flèche : compare prix actuel (Firestore prices) vs dernière entrée historique
-  // Si live update en session → utilise _prevPrices
-  // Sinon → compare prix actuel avec la 1ère entrée de l'historique complet
   bool? get _isPriceUp {
     final currRaw = _isBuy
         ? (_prices[_metal]?['buy'] ?? 0)
@@ -274,16 +270,12 @@ class _HomeScreenState extends State<HomeScreen> {
     double prev;
 
     if (prevLive > 0) {
-      // Changement détecté en live dans cette session
       prev = _selectedKarat == 24 ? prevLive * 1.3333 : prevLive;
     } else {
-      // Au lancement : comparer prix actuel vs 1ère entrée de l'historique complet
       final allHistory = _selectedTab == 0 ? _goldHistoryAll : _silverHistoryAll;
       if (allHistory.isEmpty) return null;
       final h0Raw = _isBuy ? allHistory[0].buyPrice : allHistory[0].sellPrice;
       prev = _selectedKarat == 24 ? h0Raw * 1.3333 : h0Raw;
-      // Si le prix actuel == la 1ère entrée historique → pas de changement récent
-      // Essayer avec la 2ème entrée
       if (curr == prev && allHistory.length >= 2) {
         final h1Raw = _isBuy ? allHistory[1].buyPrice : allHistory[1].sellPrice;
         prev = _selectedKarat == 24 ? h1Raw * 1.3333 : h1Raw;
@@ -404,13 +396,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildBuySellAndKaratRow(),
                       const SizedBox(height: 20),
                       _buildPriceCard(),
-                      // ✅ Publicité EN HAUT (avant historique)
                       if (_adActive) ...[
                         const SizedBox(height: 20),
                         _buildAdBanner(),
                       ],
                       const SizedBox(height: 24),
-                      // ✅ Filtre + historique EN BAS
                       _buildHistorySection(),
                       const SizedBox(height: 16),
                     ]),
@@ -419,7 +409,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
-  // ✅ Header avec "By سقيم" sous ADDHAIBY
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -456,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _chipTab(_translate('Or (ذهب)'), 0, _selectedTab,
           (i) => setState(() {
                 _selectedTab = i;
-                _selectedKarat = 18; // reset karat quand on change de métal
+                _selectedKarat = 18;
               }),
           const Color(0xFFD4A017)),
       const SizedBox(width: 10),
@@ -492,7 +481,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ Buy/Sell + boutons 18k/24k sur la même ligne
   Widget _buildBuySellAndKaratRow() {
     return Row(
       children: [
@@ -500,7 +488,6 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(width: 10),
         _buySellChip(_translate('Sell (بيع)'), false),
         const Spacer(),
-        // Boutons 18k / 24k uniquement pour l'or
         if (_selectedTab == 0) ...[
           _karatBtn(18),
           const SizedBox(width: 8),
@@ -510,7 +497,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ Bouton karat 18k / 24k
   Widget _karatBtn(int karat) {
     final selected = _selectedKarat == karat;
     return GestureDetector(
@@ -563,13 +549,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ Carte prix avec texte arabe modifié, taille agrandie, flèche tendance, badge karat
   Widget _buildPriceCard() {
     final isUp = _isPriceUp;
 
     String priceLabel;
     if (_selectedTab == 0) {
-      // Or
       final karatLabel = _selectedKarat == 24 ? 'عيار 24' : 'عيار 18';
       if (_isBuy) {
         priceLabel =
@@ -579,7 +563,6 @@ class _HomeScreenState extends State<HomeScreen> {
             'سعر بيع الذهب التقريبي لليوم ($karatLabel) حسب المنجرة هو';
       }
     } else {
-      // Argent / Fضة
       if (_isBuy) {
         priceLabel = 'سعر الفضة التقريبي لليوم حسب المنجرة هو';
       } else {
@@ -604,7 +587,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // ✅ Texte agrandi (15) et plus visible
         Text(
           priceLabel,
           style: TextStyle(
@@ -630,7 +612,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       : const Color(0xFF1A1A1A)),
             ),
             const SizedBox(width: 10),
-            // ✅ Flèche tendance : verte si hausse, rouge si baisse, grise si stable
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Icon(
@@ -654,7 +635,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ? Colors.grey.shade400
                         : Colors.grey)),
             const SizedBox(width: 8),
-            // ✅ Badge karat affiché pour l'or
             if (_selectedTab == 0)
               Container(
                 padding:
@@ -873,12 +853,10 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
-  // ✅ Lignes historique avec flèche tendance entre entrées
   Widget _buildHistoryRow(PriceEntry e, List<PriceEntry> list) {
     final idx = list.indexOf(e);
     final isLatest = idx == 0 && _filterDate == null;
 
-    // Comparer avec l'entrée précédente dans la liste
     bool? buyTrend;
     bool? sellTrend;
     if (idx < list.length - 1) {
@@ -934,10 +912,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           : FontWeight.normal)),
             ]),
             Row(children: [
-              // Colonne Achat
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Row(children: [
-                  // Flèche tendance achat (vert si hausse, rouge si baisse)
                   Icon(
                     buyTrend == null
                         ? Icons.arrow_downward
@@ -957,10 +933,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(fontSize: 10, color: Colors.grey)),
               ]),
               const SizedBox(width: 16),
-              // Colonne Vente
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Row(children: [
-                  // Flèche tendance vente (vert si hausse, rouge si baisse)
                   Icon(
                     sellTrend == null
                         ? Icons.arrow_upward
@@ -1376,10 +1350,151 @@ void _showCategoryContactSheet(String category) {
                     ),
                   ),
                 ],
+
+                // ═══════════════════════════════════════════════
+                // 🔧 SECTION DEBUG NOTIFICATIONS (temporaire)
+                // À SUPPRIMER une fois les notifications validées.
+                // ═══════════════════════════════════════════════
+                const SizedBox(height: 30),
+                const Divider(),
+                const SizedBox(height: 12),
+                Text('🔧 Debug notifications',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: _isDarkMode
+                            ? Colors.white
+                            : Colors.black87)),
+                const SizedBox(height: 4),
+                Text(
+                  'Outil temporaire de test. Appuie pour copier le token FCM de cet appareil, puis colle-le dans Firebase → Messaging → Nouveau test.',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final token =
+                          await NotificationService.getFcmToken();
+                      if (!mounted) return;
+                      if (token != null && token.isNotEmpty) {
+                        await Clipboard.setData(
+                            ClipboardData(text: token));
+                        debugPrint('📱 FCM TOKEN COMPLET : $token');
+                        if (!mounted) return;
+                        _showTokenDialog(token);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                '❌ Token indisponible (APNs pas encore prêt ?). Réessaie dans quelques secondes.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Copier le token FCM'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF607D8B),
+                      foregroundColor: Colors.white,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final ok = await NotificationService
+                          .resubscribeTopic();
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(ok
+                              ? '✅ Ré-abonné au topic price_updates'
+                              : '❌ Échec du ré-abonnement au topic'),
+                          backgroundColor:
+                              ok ? Colors.green : Colors.red,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Forcer l\'abonnement au topic'),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF607D8B)),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
               ]),
         ),
       ),
     ]);
+  }
+
+  // 🔧 Dialogue debug : affiche le token FCM en entier (copiable)
+  void _showTokenDialog(String token) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor:
+            _isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        title: Row(children: [
+          const Icon(Icons.check_circle, color: Colors.green),
+          const SizedBox(width: 8),
+          Text('Token copié',
+              style: TextStyle(
+                  color: _isDarkMode ? Colors.white : Colors.black87)),
+        ]),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Le token a été copié dans le presse-papier. Tu peux aussi le sélectionner ci-dessous :',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: _isDarkMode
+                        ? Colors.grey.shade400
+                        : Colors.grey.shade600),
+              ),
+              const SizedBox(height: 12),
+              SelectableText(
+                token,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    color:
+                        _isDarkMode ? Colors.white : Colors.black87),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _toggleBtn(String label, bool isDay) {
@@ -1632,7 +1747,6 @@ void _showCategoryContactSheet(String category) {
               ),
             ),
             const SizedBox(height: 10),
-            // ✅ Aperçu du prix 24k calculé automatiquement
             StatefulBuilder(builder: (ctx2, setD2) {
               buyCtrl.addListener(() => setD2(() {}));
               sellCtrl.addListener(() => setD2(() {}));

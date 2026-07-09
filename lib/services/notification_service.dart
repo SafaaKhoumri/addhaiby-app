@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+
 const String _projectId = 'addhaiby-de63d';
 const String _topic     = 'price_updates';
 
@@ -12,28 +13,77 @@ class NotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
   // ── Initialisation au démarrage de l'app ──────────────────
-static Future<void> initialize() async {
-  if (kIsWeb) return; // ← Skip tout sur le web
-  
-  await _messaging.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+  static Future<void> initialize() async {
+    if (kIsWeb) return; // ← Skip tout sur le web
 
-  await _messaging.subscribeToTopic(_topic);
+    await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    debugPrint('🔔 Notification foreground : ${message.notification?.title}');
-  });
+    // ✅ Afficher les notifs même quand l'app est au premier plan (iOS)
+    await _messaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    debugPrint('📲 App ouverte via notification : ${message.data}');
-  });
+    // ✅ IMPORTANT iOS : attendre que le token APNs soit prêt AVANT de s'abonner.
+    // Au 1er lancement, l'enregistrement APNs prend 1-2 s ; sans cette attente,
+    // subscribeToTopic part trop tôt et échoue silencieusement.
+    String? apnsToken = await _messaging.getAPNSToken();
+    int retries = 0;
+    while (apnsToken == null && retries < 8) {
+      await Future.delayed(const Duration(seconds: 1));
+      apnsToken = await _messaging.getAPNSToken();
+      retries++;
+    }
+    debugPrint('🍏 APNs Token : $apnsToken');
 
-  final token = await _messaging.getToken();
-  debugPrint('📱 FCM Token : $token');
-}
+    // Abonnement au topic seulement après que APNs soit prêt
+    try {
+      await _messaging.subscribeToTopic(_topic);
+      debugPrint('✅ Abonné au topic $_topic');
+    } catch (e) {
+      debugPrint('❌ Erreur subscribeToTopic : $e');
+    }
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint('🔔 Notification foreground : ${message.notification?.title}');
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint('📲 App ouverte via notification : ${message.data}');
+    });
+
+    final token = await _messaging.getToken();
+    debugPrint('📱 FCM Token : $token');
+  }
+
+  // ✅ Récupérer le token FCM pour l'afficher dans l'UI (diagnostic)
+  static Future<String?> getFcmToken() async {
+    if (kIsWeb) return null;
+    try {
+      return await _messaging.getToken();
+    } catch (e) {
+      debugPrint('❌ Erreur getFcmToken : $e');
+      return null;
+    }
+  }
+
+  // ✅ Vérifier si l'abonnement au topic a fonctionné (re-tente une fois)
+  static Future<bool> resubscribeTopic() async {
+    if (kIsWeb) return false;
+    try {
+      await _messaging.subscribeToTopic(_topic);
+      return true;
+    } catch (e) {
+      debugPrint('❌ Erreur resubscribeTopic : $e');
+      return false;
+    }
+  }
+
   // ── Générer un token OAuth2 via le compte de service ──────
   static Future<String> _getAccessToken() async {
     final jsonStr = await rootBundle.loadString('assets/service_account.json');
