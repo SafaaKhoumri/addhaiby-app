@@ -3,31 +3,36 @@ import UIKit
 import FirebaseMessaging
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate {
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // ✅ Uniquement : demander à iOS de s'enregistrer auprès d'APNs.
-    // On NE touche PAS au delegate de notification ni à FirebaseApp.configure()
-    // (c'est ce qui faisait figer le démarrage sur Flutter 3.44).
+    // Enregistrement des plugins Flutter (système classique, sans Scene)
+    GeneratedPluginRegistrant.register(with: self)
+
+    // ✅ S'enregistrer auprès d'APNs
     application.registerForRemoteNotifications()
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-  // ✅ On GARDE le système de plugins d'origine (celui qui se lance bien)
-  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
-    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-  }
-
-  // ✅ LE PONT ESSENTIEL : quand APNs renvoie le token, le donner à Firebase.
-  // C'est la seule ligne qui manquait pour que subscribeToTopic marche.
+  // ✅ LE PONT : donner le token APNs à Firebase Messaging.
+  // Sans Scene, ce callback arrive bien ici → le token n'est plus perdu.
   override func application(
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
     Messaging.messaging().apnsToken = deviceToken
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+
+  override func application(
+    _ application: UIApplication,
+    didFailToRegisterForRemoteNotificationsWithError error: Error
+  ) {
+    print("❌ Échec enregistrement APNs : \(error.localizedDescription)")
+    super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
 }
