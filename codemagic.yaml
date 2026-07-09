@@ -13,9 +13,7 @@ workflows:
         script: flutter packages pub get
       - name: Install CocoaPods
         script: |
-          cd ios
-          pod install
-          cd ..
+          cd ios && pod install && cd ..
       - name: Inject GoogleService-Info.plist
         script: |
           echo $GOOGLE_SERVICE_INFO_PLIST | base64 --decode > ios/Runner/GoogleService-Info.plist
@@ -24,7 +22,11 @@ workflows:
           keychain initialize
           app-store-connect fetch-signing-files com.addhaiby.app \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --issuer-id $APP_STORE_CONNECT_ISSUER_ID \
+            --key-id $APP_STORE_CONNECT_KEY_ID \
+            --private-key @env:APP_STORE_CONNECT_PRIVATE_KEY \
+            --certificate-key @env:CERTIFICATE_KEY
           keychain add-certificates
           xcode-project use-profiles
       - name: Build iOS
@@ -36,6 +38,4 @@ workflows:
     publishing:
       app_store_connect:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_ID
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
+        key_id:
