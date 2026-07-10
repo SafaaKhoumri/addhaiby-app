@@ -1689,7 +1689,8 @@ void _showCategoryContactSheet(String category) {
                         'date': date,
                         'createdAt': FieldValue.serverTimestamp(),
                       });
-                      await NotificationService.sendPriceNotification(
+                      final notifError =
+                          await NotificationService.sendPriceNotification(
                         metal: k,
                         buyPrice: buy,
                         sellPrice: sell,
@@ -1697,14 +1698,39 @@ void _showCategoryContactSheet(String category) {
                       setD(() => saving = false);
                       if (ctx.mounted) Navigator.pop(ctx);
                       if (context.mounted) {
-                        ScaffoldMessenger.maybeOf(context)
-                            ?.showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                '✅ Prix mis à jour et notification envoyée !'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
+                        if (notifError == null) {
+                          // Succès réel
+                          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  '✅ Prix mis à jour et notification envoyée !'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 4),
+                            ),
+                          );
+                        } else {
+                          // Échec : afficher l'erreur réelle dans un dialogue lisible
+                          showDialog(
+                            context: context,
+                            builder: (dctx) => AlertDialog(
+                              title: const Text('⚠️ Prix mis à jour, MAIS notification non envoyée'),
+                              content: SingleChildScrollView(
+                                child: SelectableText(
+                                  'Le prix a bien été enregistré.\n\n'
+                                  'Mais l\'envoi de la notification a échoué :\n\n'
+                                  '$notifError',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(dctx),
+                                  child: const Text('Fermer'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
                       }
                     },
               icon: saving

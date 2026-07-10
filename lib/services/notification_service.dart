@@ -74,7 +74,8 @@ class NotificationService {
   }
 
   // ── Envoyer une notification à tous les abonnés ───────────
-  static Future<void> sendPriceNotification({
+  // Retourne null si succès, sinon un message d'erreur (pour l'afficher).
+  static Future<String?> sendPriceNotification({
     required String metal,
     required double buyPrice,
     required double sellPrice,
@@ -129,11 +130,15 @@ class NotificationService {
 
       if (response.statusCode == 200) {
         debugPrint('✅ Notification envoyée avec succès');
+        return null; // succès
       } else {
-        debugPrint('❌ Erreur FCM V1 : ${response.statusCode} — ${response.body}');
+        final msg = 'HTTP ${response.statusCode} — ${response.body}';
+        debugPrint('❌ Erreur FCM V1 : $msg');
+        return msg;
       }
     } catch (e) {
       debugPrint('❌ Exception FCM : $e');
+      return 'Exception: $e';
     }
   }
 }
